@@ -10,6 +10,7 @@
 
 # Ex 1: Ungrouped hosts, specify before any group headers.
 [allinone]
+127.0.0.1
 $HOSTNAME
 
 ## green.example.com
