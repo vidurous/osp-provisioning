@@ -1,0 +1,59 @@
+---
+# packstack allinone ansible file
+- hosts: allinone
+  tasks:
+   - name: Install OpenStack Controller with ansible
+     shell: "touch /root/.packstack-done; packstack --allinone --provision-demo=n --os-neutron-ovs-bridge-mappings=provider:br-ex --os-neutron-ovs-bridge-interfaces=br-ex:eth0 --os-neutron-ml2-type-drivers=vxlan,flat"
+     args:
+       creates: /root/.packstack-done
+   - name: Pass Network Configuration eth0  
+     shell: |
+       cat > /etc/sysconfig/network-scripts/ifcfg-eth0 << EOF
+       DEVICE=eth0
+       ONBOOT=yes
+       TYPE=OVSPort
+       DEVICETYPE=ovs
+       OVS_BRIDGE=br-ex
+     args:
+       creates: /root/.ansible_ifcfg-eth0
+   - name: creating .ansible_ifcfg-eth0
+     shell: "touch /root/.ansible_ifcfg-eth0"
+     args:
+       creates: /root/.ansible_ifcfg-eth0
+   - name: Pass Network Configuration br-ex
+     shell: |
+       cat > /etc/sysconfig/network-scripts/ifcfg-br-ex << EOF
+       DEVICE=br-ex
+       BOOTPROTO=static
+       ONBOOT=yes
+       TYPE=OVSBridge
+       DEVICETYPE=ovs
+       USERCTL=yes
+       PEERDNS=yes
+       IPV6INIT=no
+       IPADDR=$IP
+       NETMASK=255.255.255.0
+       GATEWAY=192.168.0.254
+       DNS1=192.168.0.1
+     args:
+       creates: /root/.ansible_ifcfg-br-ex
+   - name: create /root/.ansible_ifcfg-br-ex
+     shell: "touch /root/.ansible_ifcfg-br-ex"
+     args:
+       creates: /root/.ansible_ifcfg-br-ex
+   - name: Change Network Variable For Loop
+     shell: "for x in `/etc/sysconfig/network-scripts/ifcfg-br-ex` `/etc/sysconfig/network-scripts/ifcfg-eth0`; do sed -i 's/$IP/'$IP'/' $x; done"
+     args:
+       creates: /root/.ansible_network_for_loop
+   - name: create /root/.ansible_network_for_loop
+     shell: "touch /root/.ansible_network_for_loop"
+     args:
+       creates: /root/.ansible_network_for_loop
+   - name: Restart Network Service
+     shell: "systemctl restart network.service"
+     args:
+       creates: /root/.ansible_systemd-network-restart
+   - name: create /root/.ansible_systemd-network-restart
+     shell: "touch /root/.ansible_systemd-network-restart"
+     args:
+       creates: /root/.ansible_systemd-network-restart
