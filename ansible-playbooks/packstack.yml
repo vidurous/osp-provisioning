@@ -1,6 +1,7 @@
 ---
 # packstack allinone ansible file
-- hosts: allinone
+- hosts: 127.0.0.1
+  connection: local
   tasks:
    - name: Install OpenStack Controller with ansible
      shell: "touch /root/.packstack-done; packstack --allinone --provision-demo=n --os-neutron-ovs-bridge-mappings=provider:br-ex --os-neutron-ovs-bridge-interfaces=br-ex:eth0 --os-neutron-ml2-type-drivers=vxlan,flat"
