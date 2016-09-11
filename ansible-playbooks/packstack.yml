@@ -41,14 +41,6 @@
      shell: "touch /root/.ansible_ifcfg-br-ex"
      args:
        creates: /root/.ansible_ifcfg-br-ex
-   - name: Change Network Variable For Loop
-     shell: "for x in `/etc/sysconfig/network-scripts/ifcfg-br-ex` `/etc/sysconfig/network-scripts/ifcfg-eth0`; do sed -i 's/$IP/'$IP'/' $x; done"
-     args:
-       creates: /root/.ansible_network_for_loop
-   - name: create /root/.ansible_network_for_loop
-     shell: "touch /root/.ansible_network_for_loop"
-     args:
-       creates: /root/.ansible_network_for_loop
    - name: Restart Network Service
      shell: "systemctl restart network.service"
      args:
