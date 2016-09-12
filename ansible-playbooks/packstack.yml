@@ -7,7 +7,7 @@
      local_action: wait_for host=$HOSTNAME state=started delay=10 timeout=20
      sudo: false
    - name: Install OpenStack Controller with ansible
-     shell: "touch /root/.ansible_{ifcfg-eth0,ifcfg-br-ex,systemd-network-restart} && rm -fr /root/.ssh/ && packstack --allinone --provision-demo=n --os-neutron-ovs-bridge-mappings=provider:br-ex --os-neutron-ovs-bridge-interfaces=br-ex:eth0 --os-neutron-ml2-type-drivers=vxlan,flat && touch /root/.packstack-done && rm -fr /root/.ansible*"
+     shell: "touch /root/.ansible_{ifcfg-eth0,ifcfg-br-ex,systemd-network-restart} && rm -fr /root/.ssh/ && packstack --allinone --provision-demo=n --os-neutron-ovs-bridge-mappings=provider:br-ex --os-neutron-ovs-bridge-interfaces=br-ex:eth0 --os-neutron-ml2-type-drivers=vxlan,flat && touch /root/.packstack-done && rm -fr /root/.ansible_*"
      args:
        creates: /root/.packstack-done
    - name: Pass Network Configuration eth0  
