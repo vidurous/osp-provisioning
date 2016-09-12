@@ -1,9 +1,7 @@
 ---
 # packstack allinone ansible file
 - hosts: 127.0.0.1
-- connection: local
-- logentries: path=/var/log/messages state=present name=system-messages.log
-- logentries: path=/var/tmp/packstack/latest/openstack-setup.log state=present name=openstack-setup.log
+  connection: local
   tasks:
    - name: waiting for server to come back
      local_action: wait_for host=$HOSTNAME state=started delay=10 timeout=20
