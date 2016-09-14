@@ -34,6 +34,7 @@
        DEVICETYPE=ovs
        USERCTL=yes
        PEERDNS=yes
+       MACADDR=
        IPV6INIT=no
        IPADDR=$IP
        NETMASK=255.255.255.0
