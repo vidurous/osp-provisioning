@@ -37,7 +37,7 @@
        USERCTL=yes
        PEERDNS=yes
        MACADDR=$MAC
-       OVS_EXTRA="set bridge $DEVICE other-config:hwaddr=$MACADDR"
+       OVS_EXTRA="set bridge br-ex other-config:hwaddr=$MACADDR"
        IPV6INIT=no
        IPADDR=$IP
        NETMASK=255.255.255.0
