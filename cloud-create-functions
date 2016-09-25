@@ -1,9 +1,12 @@
 #!/bin/bash
 
 ### repurpose arguments to variables 
+
 X=$1
 
-### redirect standard output to a file to print then later remove
+##
+### Global redirect standard output to a file to mold output for visual aesthetics -hacky lol
+
 c=`cat /root/1`
 r=`rm -fr /root/1`
 
@@ -66,7 +69,7 @@ cat >/etc/ansible/$X-packstack.yml<< EOF
      become: sudo
 
    - name: STAGE 2 Configuration Ansible is installing Red Hat OpenStack (Liberty) in a non-ha single node configuration
-     shell: " rm -fr /root/.ssh/known_hosts ; sshpass -pNSAbegone3# ssh-copy-id  -o StrictHostKeyChecking=no root$X.irondung.net ; ssh -o StrictHostKeyChecking=no root@$X.irondung.net 'sh /root/ansible.sh' 2>/dev/null "
+     shell: " rm -fr /root/.ssh/known_hosts ; sshpass -p$SSHPASS ssh-copy-id  -o StrictHostKeyChecking=no root$X.irondung.net ; ssh -o StrictHostKeyChecking=no root@$X.irondung.net 'sh /root/ansible.sh' 2>/dev/null "
      args:
        creates: /etc/ansible/.packstack-2-$X
 EOF
