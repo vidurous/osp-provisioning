@@ -42,14 +42,14 @@ echo -e "BUILDING NODE [$c \033[01;32m$X\033[0m] *******************************
 ###
 ### add an entry to ansible host file for handoff[1]
 
-host() {
+__host() {
 echo $X.irondung.net >> /etc/ansible/hosts
 }
 
 ##
 ### ansible-playbook function
 
-__playbook() {
+__playbook_create() {
 cat >/etc/ansible/$X-packstack.yml<< EOF
 ---
 
@@ -118,8 +118,10 @@ done
 exit $?
 }
 
-echo -e "STAGE 2 COMPLETE [\033[01m$X\033[0m] is now fully deployed *********************"
-echo -e "TAKE ACTION: `# sshpass $SSHPASS root@$X.irondung.net` ********************"
+echo -e "STAGE 2 COMPLETE **********************************************************"
+echo -e "[\033[01m$X\033[0m] is now fully deployed"
+echo -e "TAKE ACTION: **************************************************************"
+echo -e "[\033[01m`sshpass $SSHPASS root@$X.irondung.net`\033[0m]"
 
 ##
 ### main
@@ -127,8 +129,8 @@ echo -e "TAKE ACTION: `# sshpass $SSHPASS root@$X.irondung.net` ****************
 __controller_label
 __controller
 __sleep_10
-__finished
+__finished_label
 __host
-__playbook
+__playbook_create
 __ansible_start
 __exit_0
