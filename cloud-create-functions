@@ -13,12 +13,6 @@
 X=$1
 
 ##
-### Global redirect standard output to a file to mold output for visual aesthetics -hacky lol
-
-c=`cat /root/1`
-r=`rm -fr /root/1`
-
-##
 ### main controller create function which creates a vm with `--hostgroup-id=2` (foreman) using compute resource `--compute-resource-id=1` (oVirt) 
 
 __controller() {
