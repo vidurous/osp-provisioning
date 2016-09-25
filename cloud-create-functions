@@ -90,7 +90,7 @@ done
 ##
 ### sleep 10 function 
 
-__sleep_10() {
+__sleep_() {
 sleep 10 &
 PID=$!
 i=1
@@ -103,34 +103,19 @@ done
 }
 
 ##
-### Finalize build and exit
+### Final steps
 
-__exit_0() {
-sleep 10 &
-PID=$!
-i=1
-sp="/-\|"
-echo -n ' '
-while [ -d /proc/$PID ]
-do
-  printf "\b${sp:i++%${#sp}:1}"
-done
-exit $?
-}
-
+__exit_() {
+printf "\t%.50s\n" "STAGE 2 COMPLETE **********************************************************************************************************************"
+printf "\t%.50s\n" "[\033[01m$X\033[0m] is now fully deployed *********************************************************************************************"
 echo -e "STAGE 2 COMPLETE **********************************************************"
 echo -e "[\033[01m$X\033[0m] is now fully deployed"
 echo -e "TAKE ACTION: **************************************************************"
 echo -e "[\033[01m`sshpass $SSHPASS root@$X.irondung.net`\033[0m]"
+exit $?
+}
 
 ##
 ### main
 
-__controller_label
-__controller
-__sleep_10
-__finished_label
-__host
-__playbook_create
-__ansible_start
-__exit_0
+__controller_label && __controller ; __sleep_ && __finished_label ; __host && __playbook_create && __ansible_start && __exit_
