@@ -1,9 +1,8 @@
 #!/bin/bash
 
-'''CLOUD_CREATE_SCHEDULER
-Specific to Foreman 1.12 and oVirt 4.0.x currently utilizing hammer in STAGE 1 and ansible in STAGE 2 to automate the steps for an all-in-one OpenStack Liberty deployment given single input. Sublevel customization can be done in Foreman hostgroup assignments and defined as different functions in this scheduler. Future plans to include CONTROLLER, NETWORKNODE, COMPUTENODE(S) non-ha deployment configurations for all Red Hat OSP versions 5 through 9 and additionally incorporation ha director deployments[1]. 
-
-This is done using Foreman hammer API calls sitting ontop of oVirt via API (v3) intergrated and executed on the Foreman. Ansible is called from the Foreman server and the play is handed off to the remote vm where ansible continues the provisioning. Given we satisfy an ansible configuration in STAGE 1, any ansible configurations should be able to be used in a scheduler like this during STAGE 2, albeit work will be required to intergrate each new ansible configuration for STAGE1 builds which are hostgroups in Foreman and compute-profiles tied to templates in oVirt''' 
+### CLOUD_CREATE_SCHEDULER
+### Specific to Foreman 1.12 and oVirt 4.0.x currently utilizing hammer in STAGE 1 and ansible in STAGE 2 to automate the steps for an all-in-one OpenStack Liberty deployment given single input. Sublevel customization can be done in Foreman hostgroup assignments and defined as different functions in this scheduler. Future plans to include CONTROLLER, NETWORKNODE, COMPUTENODE(S) non-ha deployment configurations for all Red Hat OSP versions 5 through 9 and additionally incorporation ha director deployments[1].
+### This is done using Foreman hammer API calls sitting ontop of oVirt via API (v3) intergrated and executed on the Foreman. Ansible is called from the Foreman server and the play is handed off to the remote vm where ansible continues the provisioning. Given we satisfy an ansible configuration in STAGE 1, any ansible configurations should be able to be used in a scheduler like this during STAGE 2, albeit work will be required to intergrate each new ansible configuration for STAGE1 builds which are hostgroups in Foreman and compute-profiles tied to templates in oVirt
 
 ##
 ### current State: Limited Functionality
@@ -39,17 +38,21 @@ done
 
 __controller_label () {
 datestart=`date +%H:%M:%S`
-echo -e "TASK STAGE 1 [building] *************************************************************"
-echo -e "\033[00;32mok: [$X > provisioning]\033[0m"
-echo -e "TASK STARTED [$datestart] ***********************************************************"
+echo -e ""
+echo -e "TASK [STAGE 1 building] ********************************************************"
+echo -e "-\033[00;32mok: [$X > provisioning]\033[0m"
+echo -e ""
+echo -e "TASK [STARTED $datestart] ******************************************************"
 }
 
 ##
 ### foreman finished creating host label function
 
 __finished_label() {
-echo -e "TASK BUILDING NODE *******************************************************************"
-echo -e "\033[00;32mok: [$c $X > now building]\033[0m"
+c=`cat /root/1`
+r=`rm -fr /root/1`
+echo -e "-\033[00;32mok: [$c $X > now building]\033[0m"
+echo -e ""
 }
 
 ###
@@ -119,16 +122,18 @@ done
 ### Final steps
 
 __exit_() {
-echo -e "TASK STAGE 2 COMPLETE ****************************************************************"
-echo -e "\033[00;32mok: [$X > deployed]\033[0m"
-echo -e "TASK FINISHED TAKE ACTION: ***********************************************************"
-echo -e "\033[00;32mok: [sshpass $SSHPASS root@$X.irondung.net]\033[0m"
+echo -e "TASK [STAGE 2 COMPLETE] **************************************************************"
+echo -e "-\033[00;32mok: [$X > deployed]\033[0m"
+echo -e ""
+echo -e "TASK [FINISHED TAKE ACTION] **********************************************************"
+echo -e "-\033[00;32mok: [password: $SSHPASS]  ssh root@$X.irondung.net\033[0m"
+echo -e ""
 exit $?
 }
 
 ##
 ### main
-reset
-printf "\t%.50s\n" "__controller_label && __controller"
-printf "\t%.50s\n" " __sleep_ && __finished_label"
-printf "\t%.50s\n" "__host && __playbook_create && __ansible_start && __exit_"
+reset && sleep 4
+__controller_label && __controller
+__sleep_ && __finished_label
+__host && __playbook_create && __ansible_start && __exit_
