@@ -2,7 +2,6 @@
 
 ### repurpose arguments to variables 
 X=$1
--pNSAbegone3#
 
 ### redirect standard output to a file to print then later remove
 c=`cat /root/1`
@@ -120,7 +119,7 @@ exit $?
 }
 
 echo -e "STAGE 2 COMPLETE [\033[01m$X\033[0m] is now fully deployed *********************"
-echo -e "TAKE ACTION: `# sshpass -pNSAbegone3# root@$X.irondung.net` ********************"
+echo -e "TAKE ACTION: `# sshpass $SSHPASS root@$X.irondung.net` ********************"
 
 ##
 ### main
