@@ -1,13 +1,16 @@
 #!/bin/bash
 
-""" CLOUD_CREATE_SCHEDULER
+'''CLOUD_CREATE_SCHEDULER
 Specific to Foreman 1.12 and oVirt 4.0.x currently utilizing hammer in STAGE 1 and ansible in STAGE 2 to automate the steps for an all-in-one OpenStack Liberty deployment given single input. Sublevel customization can be done in Foreman hostgroup assignments and defined as different functions in this scheduler. Future plans to include CONTROLLER, NETWORKNODE, COMPUTENODE(S) non-ha deployment configurations for all Red Hat OSP versions 5 through 9 and additionally incorporation ha director deployments[1]. 
 
-This is done using Foreman hammer API calls sitting ontop of oVirt via API (v3) intergrated and executed on the Foreman. Ansible is called from the Foreman server and the play is handed off to the remote vm where ansible continues the provisioning. Given we satisfy an ansible configuration in STAGE 1, any ansible configurations should be able to be used in a scheduler like this during STAGE 2, albeit work will be required to intergrate each new ansible configuration for STAGE1 builds which are hostgroups in Foreman and compute-profiles tied to templates in oVirt. 
+This is done using Foreman hammer API calls sitting ontop of oVirt via API (v3) intergrated and executed on the Foreman. Ansible is called from the Foreman server and the play is handed off to the remote vm where ansible continues the provisioning. Given we satisfy an ansible configuration in STAGE 1, any ansible configurations should be able to be used in a scheduler like this during STAGE 2, albeit work will be required to intergrate each new ansible configuration for STAGE1 builds which are hostgroups in Foreman and compute-profiles tied to templates in oVirt''' 
 
 ##
-### Current State: Limited Functionality
-"""
+### current State: Limited Functionality
+
+##
+### arguments
+
 X=$1
 
 ##
@@ -67,15 +70,15 @@ cat >/etc/ansible/$X-packstack.yml<< EOF
   remote_user: root
   connection: local
   tasks:
-   - name: STAGE 1 Ansible is polling for build completion
+   - name: STAGE 1 Ansible polling for build status
      local_action: wait_for path=/var/log/foreman/production.log search_regex="$X.irondung.net is Built" delay=5 timeout=900
      become: sudo
 
-   - name: STAGE 1 COMPLETE Ansible is waiting for the host to reboot
+   - name: POST STAGE 1 Ansible waiting for host to reboot
      local_action: wait_for port=22 host="$X.irondung.net" state=started search_regex=OpenSSH delay=35 timeout=60
      become: sudo
 
-   - name: STAGE 2 Configuration Ansible is installing Red Hat OpenStack (Liberty) in a non-ha single node configuration
+   - name: STAGE 2 Ansible is configuring Red Hat OpenStack (Liberty) in a non-ha single node format
      shell: " rm -fr /root/.ssh/known_hosts ; sshpass -p$SSHPASS ssh-copy-id  -o StrictHostKeyChecking=no root$X.irondung.net ; ssh -o StrictHostKeyChecking=no root@$X.irondung.net 'sh /root/ansible.sh' 2>/dev/null "
      args:
        creates: /etc/ansible/.packstack-2-$X
@@ -125,4 +128,7 @@ exit $?
 
 ##
 ### main
-__controller_label && __controller ; __sleep_ && __finished_label ; __host && __playbook_create && __ansible_start && __exit_
+reset
+printf "\t%.50s\n" "__controller_label && __controller"
+printf "\t%.50s\n" " __sleep_ && __finished_label"
+printf "\t%.50s\n" "__host && __playbook_create && __ansible_start && __exit_"
