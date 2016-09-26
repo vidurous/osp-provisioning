@@ -22,7 +22,6 @@ PID=$!
 i=1
 process=`ls -fl /proc/$PID/exe|awk '{print $9,$10,$11}'`
 sp="-\|/"
-echo -ne '\n'
 while [ -d /proc/$PID ]
 do
   sleep 1; printf "\b${sp:i++%${#sp}:1}"
@@ -35,7 +34,7 @@ done
 __controller_label () {
 datestart=`date +%H:%M:%S`
 echo -e "TASK [STAGE 1 building] ********************************************************"
-echo -e "\033[00;32mok: [$X > provisioning]\033[0m"
+echo -e "\033[00;32mok: [$X.irondung.net > provisioning]\033[0m"
 echo -e ""
 echo -e "TASK [STARTED $datestart] ********************************************************"
 echo -n ' '
@@ -46,7 +45,7 @@ echo -n ' '
 
 __finished_label() {
 c=`cat /root/1`
-echo -e "\033[00;32mok: [$c $X > now building]\033[0m"
+echo -e "\033[00;32mok: [$c $X.irondung.net > now building]\033[0m"
 echo -e ""
 }
 
@@ -68,15 +67,15 @@ cat >/etc/ansible/$X-packstack.yml<< EOF
   remote_user: root
   connection: local
   tasks:
-   - name: STAGE 1 Ansible polling build status
+   - name: STAGE 1 local ansible polling build status
      local_action: wait_for path=/var/log/foreman/production.log search_regex="$X.irondung.net is Built" delay=5 timeout=900
      become: sudo
 
-   - name: STAGE 1 Ansible polling reboot status
+   - name: STAGE 1 local ansible polling reboot status
      local_action: wait_for port=22 host="$X.irondung.net" state=started search_regex=OpenSSH delay=35 timeout=60
      become: sudo
 
-   - name: STAGE 2 Ansible configuring Red Hat OSP-8 all-in-one node
+   - name: STAGE 2 remote ansible configuring Red Hat OSP-8 on $X.irondung.net
      shell: " sshpass -p$SSHPASS ssh-copy-id -o StrictHostKeyChecking=no root$X.irondung.net ; ssh -o StrictHostKeyChecking=no root@$X.irondung.net 'sh /root/ansible.sh' 2>/dev/null "
      args:
        creates: /etc/ansible/.packstack-2-$X
@@ -87,14 +86,13 @@ EOF
 ### start ansible function
 
 __ansible_start() {
-echo -e "TASK [Handing over to ansible at $datestart] ****************************************"
-echo -e "\033[00;32mok: [$X.irondung.net > remote ansible]\033[0m"
+echo -e "TASK [Handing over to ansible at $datestart] *************************************"
+echo -e "\033[00;32mok: [$X.irondung.net > local ansible]\033[0m"
 ansible-playbook -s /etc/ansible/$X-packstack.yml &
 PID=$!
 i=1
 sp="-\|/"
 process=`ls -fl /proc/$PID/exe|awk '{print $9,$10,$11}'`
-echo -ne '\n'
 while [ -d /proc/$PID ]
 do
   sleep 1; printf "\b${sp:i++%${#sp}:1}"
@@ -110,7 +108,6 @@ PID=$!
 i=1
 sp="-\|/"
 process=`ls -fl /proc/$PID/exe|awk '{print $9,$10,$11}'`
-echo -ne '\n'
 while [ -d /proc/$PID ]
 do
   sleep 1; printf "\b${sp:i++%${#sp}:1}"
