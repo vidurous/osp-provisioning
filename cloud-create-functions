@@ -1,12 +1,14 @@
 #!/bin/bash
 
 ### CLOUD_CREATE_SCHEDULER
-### Specific to Foreman 1.12 and oVirt 4.0.x currently utilizing hammer in STAGE 1 and ansible in STAGE 2 to automate the steps for an all-in-one OpenStack Liberty deployment given single input. Sublevel customization can be done in Foreman hostgroup assignments and defined as different functions in this scheduler. Future plans to include CONTROLLER, NETWORKNODE, COMPUTENODE(S) non-ha deployment configurations for all Red Hat OSP versions 5 through 9 and additionally incorporation ha director deployments[1].
-
-### This is done using Foreman hammer API calls sitting ontop of oVirt via API (v3) intergrated and executed on the Foreman. Ansible is called from the Foreman server and the play is handed off to the remote vm where ansible continues the provisioning. Given we satisfy an ansible configuration in STAGE 1, any ansible configurations should be able to be used in a scheduler like this during STAGE 2, albeit work will be required to intergrate each new ansible configuration for STAGE1 builds which are hostgroups in Foreman and compute-profiles tied to templates in oVirt
+### Specific to Foreman 1.12 and oVirt 4.0.x currently utilizing hammer in STAGE 1 and ansible in STAGE 2 to automate the steps for an all-in-one OpenStack Liberty deployment. Sublevel customization can be done in Foreman hostgroup assignments and defined as different functions that the scheduler can take advantage of. Future plans to include CONTROLLER, NETWORKNODE, COMPUTENODE(S) for non-ha deployment configurations for Red Hat OSP versions 5-9 and incorporation ha director deployments in the near future[1].
+### This is done using Foreman hammer API calls ontop of oVirt via API (v3) intergrated and executed on the Foreman in a bash shell session. Ansible is called from the Foreman server and the remote playbook is trigger allowing ansible to continue provisioning. Given we satisfy an ansible configuration in STAGE 1, any ansible configurations should be able to be used in this scheduler during STAGE 2 -work will be required to intergrate each new ansible configuration for STAGE1 builds which are hostgroups in Foreman and compute-profiles tied to templates in oVirt.
 
 ##
-### Current State: Limited Functionality
+### current State: Limited Functionality
+
+##
+### arguments
 
 X=$1
 
@@ -14,17 +16,17 @@ X=$1
 ### main controller create function which creates a vm with `--hostgroup-id=2` (foreman) using compute resource `--compute-resource-id=1` (oVirt) 
 
 __controller() {
-rm -fr /root/1
+r=`rm -fr /root/1`
 for x in "$X"; do $r; hammer host create --hostgroup-id=2 --name="$x" --compute-resource-id=1 --compute-attributes="start=1" --interface="name=eth0,network=provisioning" >1 >/root/1 ; done &
 PID=$!
 i=1
+process=`ls -fl /proc/$PID/exe|awk '{print $9,$10,$11}'`
 sp="-\|/"
-echo -n ' '
+echo -ne '\n'
 while [ -d /proc/$PID ]
 do
-  printf "\b${sp:i++%${#sp}:1}"
+  sleep 1; printf "\b${sp:i++%${#sp}:1}"
 done
-echo -n ' '
 }
 
 ##
@@ -34,8 +36,9 @@ __controller_label () {
 datestart=`date +%H:%M:%S`
 echo -e "TASK [STAGE 1 building] ********************************************************"
 echo -e "\033[00;32mok: [$X > provisioning]\033[0m"
-echo -n ' '
+echo -e ""
 echo -e "TASK [STARTED $datestart] ********************************************************"
+echo -n ' '
 }
 
 ##
@@ -44,7 +47,7 @@ echo -e "TASK [STARTED $datestart] *********************************************
 __finished_label() {
 c=`cat /root/1`
 echo -e "\033[00;32mok: [$c $X > now building]\033[0m"
-echo -n ' '
+echo -e ""
 }
 
 ###
@@ -65,16 +68,16 @@ cat >/etc/ansible/$X-packstack.yml<< EOF
   remote_user: root
   connection: local
   tasks:
-   - name: STAGE 1 Ansible Polling Build Status
+   - name: STAGE 1 Ansible polling build status
      local_action: wait_for path=/var/log/foreman/production.log search_regex="$X.irondung.net is Built" delay=5 timeout=900
      become: sudo
 
-   - name: PRE STAGE 2 Ansible Polling Reboot Status
+   - name: STAGE 1 Ansible polling reboot status
      local_action: wait_for port=22 host="$X.irondung.net" state=started search_regex=OpenSSH delay=35 timeout=60
      become: sudo
 
-   - name: STAGE 2 Ansible Configuring Red Hat OSP-8 All-in-one
-     shell: " sshpass -p$SSHPASS ssh-copy-id  -o StrictHostKeyChecking=no root$X.irondung.net ; ssh -o StrictHostKeyChecking=no root@$X.irondung.net 'sh /root/ansible.sh' 2>/dev/null "
+   - name: STAGE 2 Ansible configuring Red Hat OSP-8 all-in-one node
+     shell: " sshpass -p$SSHPASS ssh-copy-id -o StrictHostKeyChecking=no root$X.irondung.net ; ssh -o StrictHostKeyChecking=no root@$X.irondung.net 'sh /root/ansible.sh' 2>/dev/null "
      args:
        creates: /etc/ansible/.packstack-2-$X
 EOF
@@ -84,16 +87,18 @@ EOF
 ### start ansible function
 
 __ansible_start() {
+echo -e "TASK [Handing over to ansible at $datestart] ****************************************"
+echo -e "\033[00;32mok: [$X.irondung.net > remote ansible]\033[0m"
 ansible-playbook -s /etc/ansible/$X-packstack.yml &
 PID=$!
 i=1
 sp="-\|/"
-echo -n ' '
+process=`ls -fl /proc/$PID/exe|awk '{print $9,$10,$11}'`
+echo -ne '\n'
 while [ -d /proc/$PID ]
 do
-  printf "\b${sp:i++%${#sp}:1}"
+  sleep 1; printf "\b${sp:i++%${#sp}:1}"
 done
-echo -n ' '
 }
 
 ##
@@ -104,12 +109,12 @@ sleep 10 &
 PID=$!
 i=1
 sp="-\|/"
-echo -n ' '
+process=`ls -fl /proc/$PID/exe|awk '{print $9,$10,$11}'`
+echo -ne '\n'
 while [ -d /proc/$PID ]
 do
-  printf "\b${sp:i++%${#sp}:1}"
+  sleep 1; printf "\b${sp:i++%${#sp}:1}"
 done
-echo -n ' '
 }
 
 ##
@@ -118,16 +123,16 @@ echo -n ' '
 __exit_() {
 echo -e "TASK [STAGE 2 COMPLETE] **************************************************************"
 echo -e "\033[00;32mok: [$X > deployed]\033[0m"
-echo -n ' '
+echo -e ""
 echo -e "TASK [FINISHED TAKE ACTION] **********************************************************"
 echo -e "\033[00;32mok: [password: $SSHPASS]  ssh root@$X.irondung.net\033[0m"
-echo -n ' '
+echo -e ""
 exit $?
 }
 
 ##
 ### main
-reset && sleep 2
+reset && sleep 1
 __controller_label && __controller
 __sleep_ && __finished_label
 __host && __playbook_create && __ansible_start && __exit_
