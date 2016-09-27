@@ -11,9 +11,16 @@
 ### arguments
 
 X=$1
-
+SSHPASS=$2
 ##
 ### main controller create function which creates a vm with `--hostgroup-id=2` (foreman) using compute resource `--compute-resource-id=1` (oVirt) 
+
+if [ $1 or $2 -ne 0 ]
+
+then
+    echo try again
+else
+
 
 __controller() {
 r=`rm -fr /root/1`
@@ -102,7 +109,7 @@ done
 ##
 ### sleep 10 function 
 
-__sleep_() {
+__wait_() {
 sleep 10 &
 PID=$!
 i=1
@@ -124,12 +131,16 @@ echo -e ""
 echo -e "TASK [FINISHED TAKE ACTION] **********************************************************"
 echo -e "\033[00;32mok: [password: $SSHPASS]  ssh root@$X.irondung.net\033[0m"
 echo -e ""
-exit $?
 }
 
 ##
 ### main
-reset && sleep 1
-__controller_label && __controller
-__sleep_ && __finished_label
-__host && __playbook_create && __ansible_start && __exit_
+reset && sleep 1 || echo -ne "Error: inital cleanup failed"
+__controller_label || echo -ne "Syntax error: __controller_label"
+__controller || echo -ne "Error: foreman provisioning failed check /var/log/foreman/production.log for further details"
+__wait_ || echo -ne "Error: possible race condition that needs to be fixed :)"
+__finished_label || echo -ne "Syntax error: __finished_label"
+__host || echo -ne "Error: check ansible host file /etc/ansible/hosts"
+__playbook_create || echo -ne "Error: check playbook creation in /etc/ansible/"
+__ansible_start || echo -ne "Error: check ansible logs in /var/log/ansible.log on the Foreman server"
+__exit_ || echo -ne "Error: check provisioning completion on $X"
