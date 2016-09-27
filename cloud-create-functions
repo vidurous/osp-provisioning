@@ -3,7 +3,12 @@
 ### CLOUD_CREATE_SCHEDULER
 ### Specific to Foreman 1.12 and oVirt 4.0.x currently utilizing hammer in STAGE 1 and ansible in STAGE 2 to automate the steps for an all-in-one OpenStack Liberty deployment. Sublevel customization can be done in Foreman hostgroup assignments and defined as different functions that the scheduler can take advantage of. Future plans to include CONTROLLER, NETWORKNODE, COMPUTENODE(S) for non-ha deployment configurations for Red Hat OSP versions 5-9 and incorporation ha director deployments in the near future[1].
 ### This is done using Foreman hammer API calls ontop of oVirt via API (v3) intergrated and executed on the Foreman in a bash shell session. Ansible is called from the Foreman server and the remote playbook is trigger allowing ansible to continue provisioning. Given we satisfy an ansible configuration in STAGE 1, any ansible configurations should be able to be used in this scheduler during STAGE 2 -work will be required to intergrate each new ansible configuration for STAGE1 builds which are hostgroups in Foreman and compute-profiles tied to templates in oVirt.
+
+##
+### exiting on failure
+set -o pipefail
 set -e
+
 ##
 ### current State: Limited Functionality
 
