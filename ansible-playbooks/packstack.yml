@@ -28,7 +28,6 @@
      shell: |
        cat > /etc/sysconfig/network-scripts/ifcfg-br-ex << EOF
        DEVICE=br-ex
-       #BOOTPROTO=static
        OVSBOOTPROTO=dhcp
        OVSDHCPINTERFACES=eth0
        ONBOOT=yes
