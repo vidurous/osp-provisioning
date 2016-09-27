@@ -134,11 +134,7 @@ echo -e ""
 ##
 ### main
 reset && sleep 1
-__controller_label || echo -ne "Syntax error: __controller_label" && exit
-__controller || echo -ne "Error: foreman provisioning failed check /var/log/foreman/production.log for further details" && exit
-__wait_ || echo -ne "Error: possible race condition that needs to be fixed :)" && exit
-__finished_label || echo -ne "Syntax error: __finished_label" && exit
-__host || echo -ne "Error: check ansible host file /etc/ansible/hosts" && exit
-__playbook_create || echo -ne "Error: check playbook creation in /etc/ansible/" && exit
-__ansible_start || echo -ne "Error: check ansible logs in /var/log/ansible.log on the Foreman server" && exit
-__exit_ || echo -ne "Error: check provisioning completion on $X" && exit
+__controller_label && __controller 
+__wait_ && __finished_label
+__host && __playbook_create && __ansible_start
+__exit
