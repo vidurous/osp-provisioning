@@ -5,9 +5,9 @@
 ### This is done using Foreman hammer API calls ontop of oVirt via API (v3) intergrated and executed on the Foreman in a bash shell session. Ansible is called from the Foreman server and the remote playbook is trigger allowing ansible to continue provisioning. Given we satisfy an ansible configuration in STAGE 1, any ansible configurations should be able to be used in this scheduler during STAGE 2 -work will be required to intergrate each new ansible configuration for STAGE1 builds which are hostgroups in Foreman and compute-profiles tied to templates in oVirt.
 
 ##
-### exiting on failure
-set -o pipefail
-set -e
+### future testig/exiting on failure
+#set -o pipefail
+#set -e
 
 ##
 ### current State: Limited Functionality
@@ -136,5 +136,6 @@ echo -e ""
 reset && sleep 1
 __controller_label && __controller 
 __wait_ && __finished_label
-__host && __playbook_create && __ansible_start
-__exit
+__host && __playbook_create
+__ansible_start
+__exit_
