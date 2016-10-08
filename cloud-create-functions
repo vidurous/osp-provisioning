@@ -1,13 +1,13 @@
 #!/bin/bash
 
-### CLOUD_CREATE_BOOT-STRAPPER-FOO
-### Specific to Foreman 1.12 and oVirt 4.0.x currently utilizing hammer in STAGE 1 and ansible in STAGE 2 to automate the steps for an all-in-one OpenStack Liberty deployment. Sublevel customization can be done in Foreman hostgroup assignments and defined as different functions that the bootstrapper-foo can take advantage of. Future plans to include CONTROLLER, NETWORKNODE, COMPUTENODE(S) for non-ha deployment configurations for Red Hat OSP versions 5-9 and incorporation ha director deployments in the near future[1].
+### CLOUD_CREATE_SCHEDULER
+### Specific to Foreman 1.12 and oVirt 4.0.x currently utilizing hammer in STAGE 1 and ansible in STAGE 2 to automate the steps for an all-in-one OpenStack Liberty deployment. Sublevel customization can be done in Foreman hostgroup assignments and defined as different functions that the scheduler can take advantage of. Future plans to include CONTROLLER, NETWORKNODE, COMPUTENODE(S) for non-ha deployment configurations for Red Hat OSP versions 5-9 and incorporation ha director deployments in the near future[1].
 ### This is done using Foreman hammer API calls ontop of oVirt via API (v3) intergrated and executed on the Foreman in a bash shell session. Ansible is called from the Foreman server and the remote playbook is trigger allowing ansible to continue provisioning. Given we satisfy an ansible configuration in STAGE 1, any ansible configurations should be able to be used in this scheduler during STAGE 2 -work will be required to intergrate each new ansible configuration for STAGE1 builds which are hostgroups in Foreman and compute-profiles tied to templates in oVirt.
 
 ##
-### future testig/exiting on failure
-#set -o pipefail
+### exiting
 #set -e
+#set -o pipefail
 
 ##
 ### current State: Limited Functionality
@@ -16,12 +16,15 @@
 ### arguments
 
 X=$1
+#SSHPASS=$2
 ##
 ### main controller create function which creates a vm with `--hostgroup-id=2` (foreman) using compute resource `--compute-resource-id=1` (oVirt) 
 
 __controller() {
-r=`rm -fr /root/1`
-for x in "$X"; do $r; hammer host create --hostgroup-id=2 --name="$x" --compute-resource-id=1 --compute-attributes="start=1" --interface="name=eth0,network=provisioning" >1 >/root/1 ; done &
+cl=`rm -fr /etc/ansible/.$X`
+ml=`mkdir /etc/ansible/.$X`
+se=`sed -i 's/$X.irondung.net//' /var/log/foreman/production.log`
+for x in "$X"; do $cl; $ml; $se; hammer host create --hostgroup-id=2 --name="$x" --compute-resource-id=1 --compute-attributes="start=1" --interface="name=eth0,network=provisioning" >1 >/etc/ansible/.$X/.hammer_out ; done &
 PID=$!
 i=1
 process=`ls -fl /proc/$PID/exe|awk '{print $9,$10,$11}'`
@@ -41,15 +44,15 @@ echo -e "TASK [STAGE 1 building] ***********************************************
 echo -e "\033[00;32mok: [$X.irondung.net > provisioning]\033[0m"
 echo -e ""
 echo -e "TASK [STARTED $datestart] ********************************************************"
-echo -n ' '
+echo -n ""
 }
 
 ##
 ### foreman finished creating host label function
 
 __finished_label() {
-c=`cat /root/1`
-echo -e "\033[00;32mok: [$c $X.irondung.net > now building]\033[0m"
+cl2=`cat /etc/ansible/.$X/.hammer_out`
+echo -e "\033[00;32mok: [$cl2 $X.irondung.net > now building]\033[0m"
 echo -e ""
 }
 
@@ -64,7 +67,7 @@ echo $X.irondung.net >> /etc/ansible/hosts
 ### ansible-playbook function
 
 __playbook_create() {
-cat >/etc/ansible/$X-packstack.yml<< EOF
+cat >/etc/ansible/.$X/$X-packstack.yml<< EOF
 ---
 
 - hosts: $X.irondung.net
@@ -80,9 +83,9 @@ cat >/etc/ansible/$X-packstack.yml<< EOF
      become: sudo
 
    - name: STAGE 2 remote ansible configuring Red Hat OSP-8 on $X.irondung.net
-     shell: " sshpass -p$SSHPASS ssh-copy-id -o StrictHostKeyChecking=no root$X.irondung.net ; ssh -o StrictHostKeyChecking=no root@$X.irondung.net 'sh /root/ansible.sh' 2>/dev/null "
+     shell: " ssh -o StrictHostKeyChecking=no root@$X.irondung.net 'sh /root/ansible.sh' 2>/dev/null "
      args:
-       creates: /etc/ansible/.packstack-2-$X
+       creates: /etc/ansible/.$X/.packstack-1-$X
 EOF
 }
 
@@ -92,7 +95,7 @@ EOF
 __ansible_start() {
 echo -e "TASK [Handing over to ansible at $datestart] *************************************"
 echo -e "\033[00;32mok: [$X.irondung.net > local ansible]\033[0m"
-ansible-playbook -s /etc/ansible/$X-packstack.yml &
+ansible-playbook -s /etc/ansible/.$X/$X-packstack.yml &
 PID=$!
 i=1
 sp="-\|/"
@@ -127,14 +130,18 @@ echo -e "\033[00;32mok: [$X > deployed]\033[0m"
 echo -e ""
 echo -e "TASK [FINISHED TAKE ACTION] **********************************************************"
 echo -e "\033[00;32mok: ssh root@$X.irondung.net\033[0m"
+sed -i 's/$X.irondung.net//' /etc/ansible/hosts`
 echo -e ""
+}
+
+__clean_() {
+reset
+sleep 1
 }
 
 ##
 ### main
-reset && sleep 1
-__controller_label && __controller 
-__wait_ && __finished_label
-__host && __playbook_create
-__ansible_start
+__clean_
+__controller_label && __controller && __finished_label
+__host && __playbook_create && __ansible_start
 __exit_
