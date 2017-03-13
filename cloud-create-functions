@@ -75,7 +75,7 @@ cat >/etc/ansible/.$X/$X-packstack.yml<< EOF
   connection: local
   tasks:
    - name: STAGE 1 local ansible polling build status
-     local_action: wait_for path=/var/log/foreman/production.log search_regex="$X.irondung.net is Built" delay=5 timeout=900
+     local_action: wait_for path=/var/log/foreman/production.log search_regex="adding an RR at '$X.irondung.net' A" delay=5 timeout=900
      become: sudo
 
    - name: STAGE 1 local ansible polling reboot status
